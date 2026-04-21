@@ -106,3 +106,52 @@ async def chat_completions_json(
 
     raise LLMError("LLM response did not contain a JSON object")
 
+
+async def chat_completions_text(
+    *,
+    config: LLMConfig,
+    system_prompt: str,
+    user_prompt: str,
+) -> str:
+    """
+    Call an OpenAI-compatible Chat Completions endpoint and return the assistant content as text.
+    """
+
+    url = _join_url(config.base_url, "/chat/completions")
+    headers = {"Content-Type": "application/json"}
+    if config.api_key:
+        headers["Authorization"] = f"Bearer {config.api_key}"
+
+    payload: dict[str, Any] = {
+        "model": config.model,
+        "temperature": config.temperature,
+        "max_tokens": config.max_tokens,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=config.timeout_s) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+    except httpx.HTTPError as exc:
+        raise LLMError(f"LLM request failed: {exc}") from exc
+
+    if resp.status_code >= 400:
+        raise LLMError(f"LLM error {resp.status_code}: {resp.text[:500]}")
+
+    try:
+        data = resp.json()
+    except Exception as exc:  # noqa: BLE001
+        raise LLMError("LLM response was not valid JSON") from exc
+
+    try:
+        content = data["choices"][0]["message"]["content"]
+    except Exception as exc:  # noqa: BLE001
+        raise LLMError("LLM response missing choices/message/content") from exc
+
+    content_str = (content or "").strip()
+    if not content_str:
+        raise LLMError("LLM returned empty content")
+    return content_str

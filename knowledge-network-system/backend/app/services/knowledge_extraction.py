@@ -5,7 +5,8 @@ import math
 from typing import Any
 
 from app.core.config import settings
-from app.services.llm_client import LLMConfig, LLMError, chat_completions_json
+from app.services.llm_client import LLMError, chat_completions_json
+from app.services.parse_service import build_ai_client_config
 
 
 @dataclass(frozen=True)
@@ -129,13 +130,7 @@ async def extract_graph_with_llm(text: str) -> LLMGraphResult:
     if not settings.llm_enabled:
         raise LLMError("LLM is disabled")
 
-    cfg = LLMConfig(
-        base_url=settings.llm_base_url,
-        api_key=settings.llm_api_key,
-        model=settings.llm_model,
-        temperature=settings.llm_temperature,
-        max_tokens=settings.llm_max_tokens,
-    )
+    cfg = build_ai_client_config()
 
     # Simple truncation guard to avoid huge requests.
     trimmed = text.strip()
@@ -153,9 +148,8 @@ async def extract_graph_with_llm(text: str) -> LLMGraphResult:
     result.meta.update(
         {
             "provider": settings.llm_provider,
-            "base_url": settings.llm_base_url,
-            "model": settings.llm_model,
+            "base_url": cfg.base_url,
+            "model": cfg.model,
         }
     )
     return result
-

@@ -1,1 +1,24 @@
+# Node.js 依赖（那个让你力竭的文件夹）
 node_modules/
+dist/
+
+# Python 依赖与缓存
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.pytest_cache/
+# 环境变量文件（包含你的 sk-xxxx 密钥）
+.env
+.env.local
+
+# IDE 配置文件
+.vscode/
+.idea/
+# Docker 相关
+.dockerignore
+
+# 日志文件
+*.log
+npm-debug.log*
