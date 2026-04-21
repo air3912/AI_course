@@ -3,10 +3,34 @@ from __future__ import annotations
 from collections import Counter
 
 from app.services.nlp_service import extract_entities, extract_keywords, extract_relations, normalize_token
+from app.core.config import settings
+from app.services.knowledge_extraction import LLMError, extract_graph_with_llm
 
 
 class GraphService:
-    def build_from_text(self, text: str) -> dict:
+    async def build_from_text(self, text: str, *, prefer_llm: bool = True) -> dict:
+        if prefer_llm and settings.llm_enabled:
+            try:
+                llm_graph = await extract_graph_with_llm(text)
+                node_count = len(llm_graph.nodes)
+                edge_count = len(llm_graph.edges)
+                return {
+                    "nodes": llm_graph.nodes,
+                    "edges": llm_graph.edges,
+                    "keywords": llm_graph.keywords,
+                    "entities": llm_graph.entities,
+                    "stats": {
+                        "node_count": node_count,
+                        "edge_count": edge_count,
+                        "keyword_count": len(llm_graph.keywords),
+                        "entity_count": len(llm_graph.entities),
+                    },
+                    "meta": llm_graph.meta,
+                }
+            except LLMError:
+                # Fall back to the heuristic extractor.
+                pass
+
         keywords = extract_keywords(text, top_k=20)
         entities = extract_entities(text, top_k=12)
         concepts = self._merge_concepts(keywords, entities, max_count=24)
@@ -22,6 +46,7 @@ class GraphService:
                     "keyword_count": 0,
                     "entity_count": 0,
                 },
+                "meta": {"mode": "heuristic"},
             }
 
         concept_counter = Counter([normalize_token(token) for token in extract_keywords(text, top_k=200)])
@@ -69,6 +94,7 @@ class GraphService:
                 "keyword_count": len(keywords),
                 "entity_count": len(entities),
             },
+            "meta": {"mode": "heuristic"},
         }
 
     def _merge_concepts(self, keywords: list[str], entities: list[str], max_count: int = 24) -> list[str]:

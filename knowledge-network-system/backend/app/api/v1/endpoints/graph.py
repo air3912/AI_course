@@ -10,11 +10,11 @@ router = APIRouter()
 
 
 @router.post("/build", response_model=GraphBuildResponse)
-def build_graph(
+async def build_graph(
     payload: GraphBuildRequest,
     graph_service: GraphService = Depends(get_graph_service),
 ) -> GraphBuildResponse:
-    graph = graph_service.build_from_text(payload.text)
+    graph = await graph_service.build_from_text(payload.text, prefer_llm=payload.prefer_llm)
     return GraphBuildResponse(**graph)
 
 

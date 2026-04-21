@@ -28,6 +28,7 @@ async def upload_file(
 @router.post("/process", response_model=UploadProcessResponse)
 async def upload_and_process(
     file: UploadFile = File(...),
+    prefer_llm: bool = True,
     file_service: FileService = Depends(get_file_service),
 ) -> UploadProcessResponse:
     if not is_supported_upload(file.filename):
@@ -40,7 +41,7 @@ async def upload_and_process(
         raise HTTPException(status_code=422, detail="Document text extraction returned empty content.")
 
     graph_service = GraphService()
-    graph = graph_service.build_from_text(text)
+    graph = await graph_service.build_from_text(text, prefer_llm=prefer_llm)
 
     with SessionLocal() as session:
         document = Document(filename=file.filename, file_type=file_type, path=saved_path)
@@ -52,9 +53,10 @@ async def upload_and_process(
                 "document_id": document.id,
                 "filename": file.filename,
                 "file_type": file_type,
-        "text_length": len(text),
-        "extracted_text_preview": graph_service.build_preview(text),
-        "graph": graph,
+                "text_length": len(text),
+                "extracted_text_preview": graph_service.build_preview(text),
+                "graph": graph,
+                "graph_meta": graph.get("meta") or {},
             }
         )
         session.add(snapshot)

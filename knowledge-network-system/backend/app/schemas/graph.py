@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class GraphBuildRequest(BaseModel):
     text: str
+    prefer_llm: bool = True
 
 
 class GraphNode(BaseModel):

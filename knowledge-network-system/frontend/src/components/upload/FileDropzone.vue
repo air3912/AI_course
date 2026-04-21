@@ -1,8 +1,8 @@
-<template>
+﻿<template>
   <aside class="rounded-2xl border border-brand-900/10 bg-white p-5 shadow-sm">
     <div class="mb-4">
       <h2 class="text-base font-semibold text-brand-900">文件上传</h2>
-      <p class="mt-1 text-sm text-slate-500">支持 PDF / PPT / PPTX，上传后自动解析并生成图谱</p>
+      <p class="mt-1 text-sm text-slate-500">支持 PDF / PPT / PPTX，上传后自动解析并生成知识图谱</p>
     </div>
 
     <div
@@ -19,13 +19,7 @@
     >
       <p class="text-sm font-medium text-slate-700">拖拽文件到这里</p>
       <p class="mt-2 text-xs text-slate-500">或点击选择文件</p>
-      <input
-        ref="inputRef"
-        type="file"
-        class="hidden"
-        accept=".pdf,.ppt,.pptx"
-        @change="onChange"
-      />
+      <input ref="inputRef" type="file" class="hidden" accept=".pdf,.ppt,.pptx" @change="onChange" />
     </div>
 
     <UploadProgress class="mt-5" :progress="uploadStore.progress" :label="statusLabel" />
@@ -47,7 +41,7 @@
 
     <div v-if="uploadStore.textLength > 0" class="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
       <p>提取文本长度: {{ uploadStore.textLength }}</p>
-      <p class="mt-1">文档ID: {{ uploadStore.documentId }} | 快照ID: {{ uploadStore.graphSnapshotId }}</p>
+      <p class="mt-1">文档 ID: {{ uploadStore.documentId }} | 快照 ID: {{ uploadStore.graphSnapshotId }}</p>
       <p class="mt-2 line-clamp-4">文本预览: {{ uploadStore.extractedTextPreview }}</p>
     </div>
 
@@ -123,7 +117,7 @@ const handle = async (file?: File) => {
   if (!validExt(file.name)) {
     uploadStore.reset();
     uploadStore.status = "error";
-    uploadStore.errorMessage = "仅支持 PDF、PPT、PPTX 文件。";
+    uploadStore.errorMessage = "仅支持 PDF / PPT / PPTX 文件。";
     return;
   }
 
@@ -165,6 +159,7 @@ const handle = async (file?: File) => {
         entity_count: data.entities.length,
       },
     });
+
     uploadStore.status = "done";
   } catch (error) {
     uploadStore.status = "error";
