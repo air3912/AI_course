@@ -9,7 +9,7 @@ __pycache__/
 venv/
 .venv/
 .pytest_cache/
-# 环境变量文件（包含你的 sk-xxxx 密钥）
+# 环境变量文件（真实密钥只放在本地 .env，不提交到 GitHub）
 .env
 .env.local
 
